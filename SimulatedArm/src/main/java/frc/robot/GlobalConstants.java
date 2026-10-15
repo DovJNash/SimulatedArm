@@ -1,0 +1,47 @@
+package frc.robot;
+
+import edu.wpi.first.wpilibj.RobotBase;
+
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class GlobalConstants {
+    public static final double PERIODIC_TIME_SEC = 0.02;
+
+    public static final Lock FASTER_THREAD_LOCK = new ReentrantLock();
+
+    public static final double ROBOT_LENGTH_X = 0.6;
+    public static final double ROBOT_LENGTH_Y = 0.6;
+
+    public static final double ROBOT_MASS = 45; //The mass of the ROBOT + BATTERY + BUMPERS in KG.
+    public static final double ROBOT_MOI = 1/12.0 * ROBOT_MASS * (ROBOT_LENGTH_X*ROBOT_LENGTH_X + ROBOT_LENGTH_Y*ROBOT_LENGTH_Y);
+
+    public static final double GRAVITY = 9.80665;
+
+    public static final double VOLTAGE_COMPENSATION_SATURATION = 12;
+
+    public static final boolean IS_REPLAY = (false);
+
+    public static final boolean SHOULD_WRITE_LOGS = true; //for when the RoboRio doesn't have enough space...
+    public static final boolean SHOULD_DISPLAY_MECHANISMS = false; //For when we want to save resources.
+
+    public static final Mode CURRENT_MODE;
+
+    public enum Mode {
+        REAL,
+        SIMULATION,
+        REPLAY
+    }
+
+    static {
+        if (RobotBase.isReal()) {
+            CURRENT_MODE = Mode.REAL;
+        } else if (RobotBase.isSimulation() && !IS_REPLAY) {
+            CURRENT_MODE = Mode.SIMULATION;
+        } else {
+            CURRENT_MODE = Mode.REPLAY;
+        }
+    }
+
+    public static final boolean IS_SIMULATION = CURRENT_MODE == Mode.SIMULATION;
+}
