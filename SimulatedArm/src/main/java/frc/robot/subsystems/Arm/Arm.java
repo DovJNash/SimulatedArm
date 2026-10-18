@@ -19,12 +19,18 @@ public class Arm extends GenericSubsystem {
     }
 
     public Command StopArm() {
-        return Commands.run(ARM_MOTOR::stopMotor);
+        return Commands.runOnce(ARM_MOTOR::stopMotor, this);
     }
 
     // TODO: Implement a method to reset actual position of the arm to 0 and THEN reset the encoder to 0.
-    public void ResetArmEncoder() {
-        ARM_MOTOR.setMotorEncoderPosition(0);
+    // I dont think this is the right way to do it
+    public Command ResetArmEncoder() {
+        Rotation2d EstimatedAngle = RobotContainer.POSE_ESTIMATOR.getCurrentAngle();
+        ARM_MOTOR.setMotorEncoderPosition(EstimatedAngle.getDegrees());
+
+        return Commands.runOnce(() -> {
+            ArmConstants.ARM_MECHANISM.updateCurrentAngle(Rotation2d.fromDegrees(0));
+        }, this);
     }
 
     public Command RotateArmMaxToMin() {
