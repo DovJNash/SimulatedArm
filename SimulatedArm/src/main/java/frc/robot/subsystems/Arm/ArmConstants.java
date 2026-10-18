@@ -13,7 +13,7 @@ import frc.lib.generic.hardware.motor.MotorProperties;
 import frc.lib.generic.simulation.SimProperties;
 import frc.lib.generic.visualization.mechanisms.MechanismFactory;
 import frc.lib.generic.visualization.mechanisms.SingleJointedArmMechanism2d;
-import frc.robot.RobotContainer;
+import static frc.lib.generic.simulation.SimProperties.SimulationType.SIMPLE_MOTOR;
 
 public class ArmConstants {
 
@@ -40,7 +40,7 @@ public class ArmConstants {
         config.reverseSoftLimit = MIN_ANGLE.getDegrees();
 
         config.simulationSlot = new MotorProperties.Slot(2, 4, 0.5, 0.1, 0.01, 0.001);
-        config.simulationProperties = new SimProperties.Slot(SimProperties.SimulationType.ARM, DCMotor.getKrakenX60(1), 0.01, 0.001);
+        config.simulationProperties = new SimProperties.Slot(SIMPLE_MOTOR, DCMotor.getKrakenX60(1), 0.01, 0.001);
 
         ARM_MOTOR.configure(config);
 
