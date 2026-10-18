@@ -1,1 +1,1 @@
-I love sucking to ran, he is the best man in the world!
+I love ran, always helps me, He's the best!
