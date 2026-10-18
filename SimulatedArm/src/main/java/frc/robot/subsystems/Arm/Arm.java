@@ -10,19 +10,21 @@ import frc.robot.RobotContainer;
 import org.littletonrobotics.junction.Logger;
 import java.util.ArrayList;
 
+import static frc.robot.subsystems.Arm.ArmConstants.ARM_MOTOR;
+
 public class Arm extends GenericSubsystem {
 
     public void SetTargetAngle(Rotation2d Angle) {
         ArmConstants.ARM_MECHANISM.updateCurrentAngle(Angle);
     }
 
-    public void StopArm() {
-        ArmConstants.ARM_MOTOR.stopMotor();
+    public Command StopArm() {
+        return Commands.run(ARM_MOTOR::stopMotor);
     }
 
     // TODO: Implement a method to reset actual position of the arm to 0 and THEN reset the encoder to 0.
     public void ResetArmEncoder() {
-        ArmConstants.ARM_MOTOR.setMotorEncoderPosition(0);
+        ARM_MOTOR.setMotorEncoderPosition(0);
     }
 
     public Command RotateArmMaxToMin() {
@@ -61,7 +63,7 @@ public class Arm extends GenericSubsystem {
     @Override
     public void periodic() {
 
-        ArmConstants.ARM_MECHANISM.updateCurrentAngle(Rotation2d.fromDegrees(ArmConstants.ARM_MOTOR.getMotorPosition()));
+        ArmConstants.ARM_MECHANISM.updateCurrentAngle(Rotation2d.fromDegrees(ARM_MOTOR.getMotorPosition()));
         ArrayList<Pose3d> a = ArmConstants.ARM_MECHANISM.armMechanism.generate3dMechanism();
         Pose3d[] poses = new Pose3d[a.size()];
         for (int i = 0; i < a.size(); i++) {
