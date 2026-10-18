@@ -1,10 +1,12 @@
 package frc.robot.subsystems.Arm;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.generic.GenericSubsystem;
+import frc.robot.RobotContainer;
 import org.littletonrobotics.junction.Logger;
 import java.util.ArrayList;
 
@@ -18,35 +20,38 @@ public class Arm extends GenericSubsystem {
         ArmConstants.ARM_MOTOR.stopMotor();
     }
 
+    // TODO: Implement a method to reset actual position of the arm to 0 and THEN reset the encoder to 0.
     public void ResetArmEncoder() {
         ArmConstants.ARM_MOTOR.setMotorEncoderPosition(0);
     }
 
     public Command RotateArmMaxToMin() {
 
-        Command RotateArmToMax = new RunCommand(() -> {
-            ArmConstants.ARM_MECHANISM.updateCurrentAngle(Rotation2d.fromDegrees(ArmConstants.MAX_ANGLE));
+        Command RotateArmToMax = Commands.run(() -> {
+            ArmConstants.ARM_MECHANISM.updateCurrentAngle(ArmConstants.MAX_ANGLE);
         }, this);
 
-        Command RotateArmToMin = new RunCommand(() -> {
-            ArmConstants.ARM_MECHANISM.updateCurrentAngle(Rotation2d.fromDegrees(ArmConstants.MIN_ANGLE));
+        Command RotateArmToMin = Commands.run(() -> {
+            ArmConstants.ARM_MECHANISM.updateCurrentAngle(ArmConstants.MIN_ANGLE);
         }, this);
 
         return RotateArmToMax.andThen(RotateArmToMin);
     }
 
     public Command RotateArmToDot() {
+        Pose2d[] robotPose = new Pose2d[]{RobotContainer.POSE_ESTIMATOR.getPose()};
+
         double DotPose_X = ArmConstants.DotPose[0].getX();
         double DotPose_Y = ArmConstants.DotPose[0].getY();
 
-        double ArmPose_X = ArmConstants.RobotPose[0].getX();
-        double ArmPose_Y = ArmConstants.RobotPose[0].getY();
+        double ArmPose_X = robotPose[0].getX();
+        double ArmPose_Y = robotPose[0].getY();
 
         double deltaX = DotPose_X - ArmPose_X;
         double deltaY = DotPose_Y - ArmPose_Y;
         double targetAngle = Math.toDegrees(Math.atan2(deltaY, deltaX));
 
-        return new RunCommand(() -> {
+        return Commands.run(() -> {
             ArmConstants.ARM_MECHANISM.updateCurrentAngle(Rotation2d.fromDegrees(targetAngle));
         }, this);
 
