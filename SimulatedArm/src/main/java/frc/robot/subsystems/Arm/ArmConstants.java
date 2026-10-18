@@ -2,10 +2,15 @@ package frc.robot.subsystems.Arm;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.system.plant.DCMotor;
 import frc.lib.generic.hardware.motor.Motor;
+import frc.lib.generic.hardware.motor.MotorConfiguration;
 import frc.lib.generic.hardware.motor.MotorFactory;
 
+import frc.lib.generic.hardware.motor.MotorProperties;
+import frc.lib.generic.simulation.SimProperties;
 import frc.lib.generic.visualization.mechanisms.MechanismFactory;
 import frc.lib.generic.visualization.mechanisms.SingleJointedArmMechanism2d;
 import frc.robot.RobotContainer;
@@ -15,12 +20,33 @@ public class ArmConstants {
     protected static final Motor ARM_MOTOR = MotorFactory.createTalonFX("ArmMotor", 1);
     public static final SingleJointedArmMechanism2d ARM_MECHANISM = MechanismFactory.createSingleJointedArmMechanism("Arm", 5);
 
-    protected final static double MAX_ANGLE = 90;
-    protected final static double MIN_ANGLE = -90;
+    protected final static Rotation2d
+        MAX_ANGLE = Rotation2d.fromDegrees(90),
+        MIN_ANGLE = Rotation2d.fromDegrees(-90);
 
     protected final static Pose3d[] DotPose = new Pose3d[]{new Pose3d(0, 4, 5, new Rotation3d())};
-        protected static Pose2d[] RobotPose = new Pose2d[]{RobotContainer.POSE_ESTIMATOR.getPose()};
 
+
+    private static void armMotorConfig() {
+        final MotorConfiguration config = new MotorConfiguration();
+        config.idleMode = MotorProperties.IdleMode.BRAKE;
+        config.inverted = false;
+
+        config.gearRatio = 67.69; // Example
+        config.profileMaxVelocity = 5;
+        config.profileMaxAcceleration = 2;
+
+        config.forwardSoftLimit = MAX_ANGLE.getDegrees();
+        config.reverseSoftLimit = MIN_ANGLE.getDegrees();
+
+        config.simulationSlot = new MotorProperties.Slot(2, 4, 0.5, 0.1, 0.01, 0.001);
+        config.simulationProperties = new SimProperties.Slot(SimProperties.SimulationType.ARM, DCMotor.getKrakenX60(1), 0.01, 0.001);
+
+        ARM_MOTOR.configure(config);
+
+        ARM_MOTOR.setMotorEncoderPosition(0);
+
+    }
 
 
 }
