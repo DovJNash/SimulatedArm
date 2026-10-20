@@ -5,11 +5,8 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
-import frc.lib.generic.hardware.motor.Motor;
-import frc.lib.generic.hardware.motor.MotorConfiguration;
-import frc.lib.generic.hardware.motor.MotorFactory;
+import frc.lib.generic.hardware.motor.*;
 
-import frc.lib.generic.hardware.motor.MotorProperties;
 import frc.lib.generic.simulation.SimProperties;
 import frc.lib.generic.visualization.mechanisms.MechanismFactory;
 import frc.lib.generic.visualization.mechanisms.SingleJointedArmMechanism2d;
@@ -24,7 +21,7 @@ public class ArmConstants {
         MAX_ANGLE = Rotation2d.fromDegrees(90),
         MIN_ANGLE = Rotation2d.fromDegrees(-90);
 
-    protected final static Pose3d[] DotPose = new Pose3d[]{new Pose3d(0, 4, 5, new Rotation3d())};
+    protected final static Pose3d[] dotPose = new Pose3d[]{new Pose3d(0, 4, 5, new Rotation3d())};
 
 
     private static void armMotorConfig() {
@@ -44,7 +41,13 @@ public class ArmConstants {
 
         ARM_MOTOR.configure(config);
 
-        ARM_MOTOR.setMotorEncoderPosition(0);
+        ARM_MOTOR.setupSignalUpdates(MotorSignal.VOLTAGE);
+        ARM_MOTOR.setupSignalUpdates(MotorSignal.CURRENT);
+        ARM_MOTOR.setupSignalUpdates(MotorSignal.TEMPERATURE);
+        ARM_MOTOR.setupSignalUpdates(MotorSignal.CLOSED_LOOP_TARGET);
+        ARM_MOTOR.setupSignalUpdates(MotorSignal.POSITION);
+        ARM_MOTOR.setupSignalUpdates(MotorSignal.VELOCITY);
+        ARM_MOTOR.setupSignalUpdates(MotorSignal.ACCELERATION);
 
     }
 
