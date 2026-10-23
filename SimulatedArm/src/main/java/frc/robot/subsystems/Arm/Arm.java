@@ -24,7 +24,6 @@ public class Arm extends GenericSubsystem {
         return Commands.runOnce(ARM_MOTOR::stopMotor, this);
     }
 
-    // TODO: Implement a method to reset actual position of the arm to 0 and THEN reset the encoder to 0.
     // "Give volts" to the arm until theres a mechanical stop, then reset the encoder to 0.
     public Command resetArmEncoder() {
         return Commands.runOnce(() -> {
