@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.lib.generic.GenericSubsystem;
 import frc.lib.generic.hardware.motor.MotorProperties;
 import org.littletonrobotics.junction.Logger;
@@ -14,10 +15,8 @@ import static frc.robot.RobotContainer.POSE_ESTIMATOR;
 
 public class Arm extends GenericSubsystem {
 
-    public Command setTargetAngle(Rotation2d Angle) {
-        return Commands.runOnce(() -> {
-            ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, Angle.getRotations());
-        }, this);
+    public void setTargetAngle(Rotation2d Angle) {
+        ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, Angle.getRotations());
     }
 
     public Command stopArm() {
@@ -38,15 +37,17 @@ public class Arm extends GenericSubsystem {
 
     public Command rotateArmMaxToMin() {
 
-        Command rotateArmToMax = Commands.run(() -> {
+        Command rotateArmToMax = Commands.runOnce(() -> {
             setTargetAngle(MAX_ANGLE);
         }, this);
 
-        Command rotateArmToMin = Commands.run(() -> {
+        Command rotateArmToMin = Commands.runOnce(() -> {
             setTargetAngle(MIN_ANGLE);
         }, this);
 
-        return rotateArmToMax.andThen(rotateArmToMin);
+        return Commands.run(() -> {
+            rotateArmToMax.andThen(rotateArmToMin);
+        }, this);
     }
 
     public Command rotateArmToDot() {
