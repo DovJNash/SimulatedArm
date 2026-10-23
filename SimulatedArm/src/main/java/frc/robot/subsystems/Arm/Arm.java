@@ -28,9 +28,9 @@ public class Arm extends GenericSubsystem {
     // "Give volts" to the arm until theres a mechanical stop, then reset the encoder to 0.
     public Command resetArmEncoder() {
         return Commands.runOnce(() -> {
-            ARM_MOTOR.setOutput(MotorProperties.ControlMode.VOLTAGE, 5);
+            ARM_MOTOR.setOutput(MotorProperties.ControlMode.VOLTAGE, -5);
 
-            if (ARM_MOTOR.getCurrent() > 5) {
+            if (ARM_MOTOR.getCurrent() != -5) {
                 ARM_MOTOR.stopMotor();
                 ARM_MOTOR.setMotorEncoderPosition(0);
             }
@@ -40,30 +40,30 @@ public class Arm extends GenericSubsystem {
     public Command rotateArmMaxToMin() {
 
         Command rotateArmToMax = Commands.run(() -> {
-            ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, MAX_ANGLE.getRotations());
+            setTargetAngle(MAX_ANGLE);
         }, this);
 
         Command rotateArmToMin = Commands.run(() -> {
-            ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, MIN_ANGLE.getRotations());
+            setTargetAngle(MIN_ANGLE);
         }, this);
 
         return rotateArmToMax.andThen(rotateArmToMin);
     }
 
     public Command rotateArmToDot() {
-        Pose2d[] robotPose = new Pose2d[]{POSE_ESTIMATOR.getPose()};
-        double dotPose_X = dotPose[0].getX(),
-         dotPose_Y = dotPose[0].getY(),
+        Pose2d robotPose = POSE_ESTIMATOR.getPose();
+        double dotPoseX = dotPose.getX(),
+         dotPoseY = dotPose.getY(),
 
-         armPose_X = robotPose[0].getX(),
-         armPose_Y = robotPose[0].getY(),
+         armPoseX = robotPose.getX(),
+         armPoseY = robotPose.getY(),
 
-         deltaX = dotPose_X - armPose_X,
-         deltaY = dotPose_Y - armPose_Y,
+         deltaX = dotPoseX - armPoseX,
+         deltaY = dotPoseY - armPoseY,
 
          targetAngle = Math.toDegrees(Math.atan2(deltaY, deltaX));
 
-        return Commands.run(() -> {ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, targetAngle);}, this);
+        return Commands.run(() -> {setTargetAngle(Rotation2d.fromDegrees(targetAngle));}, this);
 
     }
 
