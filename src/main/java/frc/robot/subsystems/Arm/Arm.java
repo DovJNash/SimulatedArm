@@ -15,6 +15,12 @@ import static frc.robot.RobotContainer.POSE_ESTIMATOR;
 
 public class Arm extends GenericSubsystem {
 
+    ArmConstants armConstants = new ArmConstants();
+
+    public Arm() {
+        armMotorConfig();
+    }
+
     public void setTargetAngle(Rotation2d Angle) {
         ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, Angle.getRotations());
     }
@@ -45,7 +51,7 @@ public class Arm extends GenericSubsystem {
             setTargetAngle(MIN_ANGLE);
         }, this);
 
-        return Commands.run(() -> {
+        return Commands.runOnce(() -> {
             rotateArmToMax.andThen(rotateArmToMin);
         }, this);
     }
@@ -63,7 +69,7 @@ public class Arm extends GenericSubsystem {
 
          targetAngle = Math.toDegrees(Math.atan2(deltaY, deltaX));
 
-        return Commands.run(() -> {setTargetAngle(Rotation2d.fromDegrees(targetAngle));}, this);
+        return Commands.runOnce(() -> {setTargetAngle(Rotation2d.fromDegrees(targetAngle));}, this);
 
     }
 
@@ -75,6 +81,6 @@ public class Arm extends GenericSubsystem {
         for (int i = 0; i < a.size(); i++) {
             poses[i] = a.get(i);
         }
-        Logger.recordOutput("Example/MechanismPoses", poses);
+        Logger.recordOutput("ARM/MechanismPoses", poses);
     }
 }
