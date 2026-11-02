@@ -1,1 +1,0 @@
-I love ran, always helps me, He's the best!

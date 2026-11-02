@@ -1,0 +1,366 @@
+package frc.lib.generic.hardware.motor.hardware.ctre;
+
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.controls.*;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.*;
+import edu.wpi.first.math.Pair;
+import edu.wpi.first.units.measure.*;
+import frc.lib.generic.OdometryThread;
+import frc.lib.generic.hardware.HardwareManager;
+import frc.lib.generic.hardware.motor.*;
+import frc.lib.generic.hardware.motor.hardware.MotorUtilities;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Queue;
+import java.util.function.DoubleSupplier;
+
+import static frc.lib.generic.Feedforward.Type.ARM;
+import static frc.lib.generic.OdometryThread.ODOMETRY_FREQUENCY_HERTZ;
+import static frc.lib.generic.hardware.motor.MotorInputs.MOTOR_INPUTS_LENGTH;
+import static frc.lib.generic.hardware.motor.MotorSignal.VELOCITY;
+
+public class GenericTalonFX extends Motor {
+    private final TalonFX talonFX;
+
+    private final Map<String, Queue<Double>> signalQueueList = new HashMap<>();
+
+    private final boolean[] signalsToLog = new boolean[MOTOR_INPUTS_LENGTH];
+    private final StatusSignal<Angle> positionSignal;
+    private final StatusSignal<AngularVelocity> velocitySignal;
+    private final StatusSignal<AngularAcceleration> accelerationSignal;
+    private final StatusSignal<Voltage> voltageSignal;
+    private final StatusSignal<Current> currentSignal;
+    private final StatusSignal<Temperature> temperatureSignal;
+    private final StatusSignal<Double> closedLoopTargetSignal;
+
+    private final TalonFXConfiguration talonConfig = new TalonFXConfiguration();
+    private final TalonFXConfigurator talonConfigurator;
+
+    private final VoltageOut voltageRequest = new VoltageOut(0);
+
+    private final PositionVoltage positionVoltageRequest = new PositionVoltage(0);
+    private final VelocityVoltage velocityVoltageRequest = new VelocityVoltage(0);
+
+    private final MotionMagicVoltage positionMMRequest = new MotionMagicVoltage(0);
+    private final MotionMagicVelocityVoltage velocityMMRequest = new MotionMagicVelocityVoltage(0);
+
+    private final VelocityDutyCycle bangBangDutyCycleRequest = new VelocityDutyCycle(0);
+    private final VelocityTorqueCurrentFOC bangBangCurrentRequest = new VelocityTorqueCurrentFOC(0);
+
+    private Follower followerRequest = null;
+
+    private MotorConfiguration currentConfiguration;
+
+    private boolean shouldUseProfile = false;
+    private boolean shouldIgnoreLimits = false;
+
+    public GenericTalonFX(String name, int deviceId) {
+        super(name);
+
+        talonFX = new TalonFX(deviceId);
+
+        talonConfigurator = talonFX.getConfigurator();
+
+        positionSignal = talonFX.getPosition().clone();
+        velocitySignal = talonFX.getVelocity().clone();
+        accelerationSignal = talonFX.getAcceleration().clone();
+        voltageSignal = talonFX.getMotorVoltage().clone();
+        currentSignal = talonFX.getStatorCurrent().clone();
+        temperatureSignal = talonFX.getDeviceTemp().clone();
+        closedLoopTargetSignal = talonFX.getClosedLoopReference();
+    }
+
+    @Override
+    public void setOutput(MotorProperties.ControlMode mode, double output) {
+        setOutput(mode, output, 0);
+    }
+
+    @Override
+    public void setMovingOutput(double targetPosition, double targetVelocity) {
+        talonFX.setControl(positionVoltageRequest
+                        .withPosition(targetPosition)
+                        .withVelocity(targetVelocity).withSlot(0)
+                        .withIgnoreSoftwareLimits(shouldIgnoreLimits));
+    } //todo: bake into setOutput somehow
+
+    @Override
+    public void setOutput(MotorProperties.ControlMode mode, double output, double feedforward) {
+        if (followerRequest != null) {
+            talonFX.setControl(followerRequest);
+            return;
+        }
+
+        switch (mode) {
+            case BANG_BANG_CURRENT -> talonFX.setControl(bangBangCurrentRequest.withVelocity(output).withSlot(0));
+            case BANG_BANG_DUTY_CYCLE -> talonFX.setControl(bangBangDutyCycleRequest.withVelocity(output).withSlot(0));
+            case VOLTAGE -> talonFX.setControl(voltageRequest.withOutput(output).withIgnoreSoftwareLimits(shouldIgnoreLimits));
+            case POSITION -> talonFX.setControl(getPositionRequest(output, feedforward));
+            case VELOCITY -> talonFX.setControl(getVelocityRequest(output, feedforward));
+            case CURRENT -> new UnsupportedOperationException("CTRE LOVES money and wants $150 dollrs").printStackTrace();
+        }
+    }
+
+    private ControlRequest getVelocityRequest(double output, double feedforward) {
+        if (shouldUseProfile)
+            return velocityMMRequest.withVelocity(output).withSlot(0).withFeedForward(feedforward).withIgnoreSoftwareLimits(shouldIgnoreLimits);
+        return velocityVoltageRequest.withVelocity(output).withSlot(0).withFeedForward(feedforward).withIgnoreSoftwareLimits(shouldIgnoreLimits);
+    }
+
+    private ControlRequest getPositionRequest(double output, double feedforward) {
+        if (shouldUseProfile)
+            return positionMMRequest.withPosition(output).withSlot(0).withFeedForward(feedforward).withIgnoreSoftwareLimits(shouldIgnoreLimits);
+        return positionVoltageRequest.withPosition(output).withSlot(0).withFeedForward(feedforward).withIgnoreSoftwareLimits(shouldIgnoreLimits);
+    }
+
+    @Override
+    public void stopMotor() {
+        this.setOutput(MotorProperties.ControlMode.VOLTAGE, 0);
+    }
+
+    @Override
+    public void setExternalPositionSupplier(DoubleSupplier positionSupplier) {
+        new UnsupportedOperationException("Setting external position source is not supported in TalonFX.\n Periodically call #setMotorEncoderPosition() instead.").printStackTrace();
+    }
+
+    @Override
+    public void setExternalVelocitySupplier(DoubleSupplier velocitySupplier) {
+        new UnsupportedOperationException("Setting external velocity source is not supported in TalonFX").printStackTrace();
+    }
+
+    @Override
+    public MotorConfiguration getConfig() {
+        return currentConfiguration;
+    }
+
+    @Override
+    public void setMotorEncoderPosition(double position) {
+        talonConfigurator.setPosition(position);
+    }
+
+    @Override
+    public int getDeviceID() {
+        return talonFX.getDeviceID();
+    }
+
+    @Override
+    public void setFollowerOf(Motor motor, boolean invert) {
+        if (!(motor instanceof GenericTalonFX))
+            return;
+
+        followerRequest = new Follower(motor.getDeviceID(), invert ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned);
+        talonFX.setControl(followerRequest);
+    }
+
+    @Override
+    public void ignoreSoftwareLimits(boolean ignoreLimits) {
+        shouldIgnoreLimits = ignoreLimits;
+    }
+
+    @Override
+    public boolean configure(MotorConfiguration configuration) {
+        this.currentConfiguration = configuration;
+
+        talonConfig.MotorOutput.Inverted = configuration.inverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
+        talonConfig.MotorOutput.NeutralMode = configuration.idleMode.getCTREIdleMode();
+
+        //Who the FUCK added this feature. CTRE should fucking fire him bruh
+        talonConfig.Audio.BeepOnBoot = false;
+        talonConfig.Audio.BeepOnConfig = false;
+
+        talonConfig.Voltage.PeakForwardVoltage = 12;
+        talonConfig.Voltage.PeakReverseVoltage = -12;
+
+        talonConfig.Feedback.SensorToMechanismRatio = configuration.gearRatio;
+
+        if (configuration.remoteSensorDeviceID != -1) {
+            talonConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+            talonConfig.Feedback.RotorToSensorRatio = configuration.rotorToSensorRatio;
+            talonConfig.Feedback.FeedbackRemoteSensorID = configuration.remoteSensorDeviceID;
+        }
+
+        configureMotionMagic();
+
+        setConfig0();
+        applyCurrentLimits();
+        applySoftwarePositionLimits();
+
+        talonConfig.ClosedLoopGeneral.ContinuousWrap = configuration.closedLoopContinuousWrap;
+
+        talonFX.optimizeBusUtilization();
+
+        if (configuration.bangBangDuty) {
+            talonConfig.MotorOutput.PeakForwardDutyCycle = 1.0;
+            talonConfig.MotorOutput.PeakReverseDutyCycle = 0.0;
+        }
+
+        if (configuration.bangBangCurrent) {
+            talonConfig.Slot0.kP = 99999;
+            talonConfig.TorqueCurrent.PeakForwardTorqueCurrent = 40;
+            talonConfig.TorqueCurrent.PeakReverseTorqueCurrent = 0;
+        }
+
+        return applyConfig();
+    }
+
+    private void configureMotionMagic() {
+        if (currentConfiguration.profileMaxVelocity == 0 && currentConfiguration.profileMaxAcceleration == 0 && currentConfiguration.profileMaxJerk == 0 ||
+                currentConfiguration.profileMaxVelocity != 0 && currentConfiguration.profileMaxAcceleration == 0 && currentConfiguration.profileMaxJerk == 0)
+            return;
+
+        talonConfig.MotionMagic.MotionMagicCruiseVelocity = currentConfiguration.profileMaxVelocity;
+        talonConfig.MotionMagic.MotionMagicAcceleration = currentConfiguration.profileMaxAcceleration;
+        talonConfig.MotionMagic.MotionMagicJerk = currentConfiguration.profileMaxJerk;
+
+        shouldUseProfile = true;
+    }
+
+    private void setConfig0() {
+        talonConfig.Slot0.kP = currentConfiguration.slot.kP();
+        talonConfig.Slot0.kI = currentConfiguration.slot.kI();
+        talonConfig.Slot0.kD = currentConfiguration.slot.kD();
+
+        talonConfig.Slot0.kA = currentConfiguration.slot.kA();
+        talonConfig.Slot0.kS = currentConfiguration.slot.kS();
+        talonConfig.Slot0.kV = currentConfiguration.slot.kV();
+        talonConfig.Slot0.kG = currentConfiguration.slot.kG();
+
+        if (currentConfiguration.slot.feedforwardType() != null)
+            talonConfig.Slot0.GravityType = currentConfiguration.slot.feedforwardType() == ARM
+                    ? GravityTypeValue.Arm_Cosine
+                    : GravityTypeValue.Elevator_Static;
+
+        if (currentConfiguration.slot.kS() != 0)
+            talonConfig.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseClosedLoopSign;
+    }
+
+    private void applyCurrentLimits() {
+        talonConfig.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = currentConfiguration.dutyCycleOpenLoopRampPeriod;
+        talonConfig.ClosedLoopRamps.DutyCycleClosedLoopRampPeriod = currentConfiguration.dutyCycleClosedLoopRampPeriod;
+
+        if (currentConfiguration.statorCurrentLimit != -1) {
+            talonConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+            talonConfig.CurrentLimits.StatorCurrentLimit = currentConfiguration.statorCurrentLimit;
+        }
+
+        if (currentConfiguration.supplyCurrentLimit != -1) {
+            talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+            talonConfig.CurrentLimits.SupplyCurrentLimit = currentConfiguration.supplyCurrentLimit;
+        }
+    }
+
+    private void applySoftwarePositionLimits() {
+        if (currentConfiguration.forwardSoftLimit != null) {
+            talonConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+            talonConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = currentConfiguration.forwardSoftLimit;
+        }
+
+        if (currentConfiguration.reverseSoftLimit != null) {
+            talonConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+            talonConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = currentConfiguration.reverseSoftLimit;
+        }
+    }
+
+    private boolean applyConfig() {
+        int counter = 10;
+        StatusCode statusCode = null;
+
+        while (statusCode != StatusCode.OK && counter > 0) {
+            statusCode = talonConfigurator.apply(talonConfig);
+            counter--;
+        }
+
+        return statusCode == StatusCode.OK;
+    }
+
+    @Override
+    public void setupSignalUpdates(MotorSignal signal, boolean useFasterThread) {
+        signalsToLog[signal.getId()] = true;
+
+        if (!useFasterThread) {
+            switch (signal) {
+                case VELOCITY -> setupNonThreadedSignal(velocitySignal);
+                case POSITION -> setupNonThreadedSignal(positionSignal);
+                case POSITION_AND_VELOCITY -> {
+                    signalsToLog[VELOCITY.getId()] = true;
+
+                    setupNonThreadedSignal(positionSignal);
+                    setupNonThreadedSignal(velocitySignal);
+                }
+                case ACCELERATION -> setupNonThreadedSignal(accelerationSignal);
+                case VOLTAGE -> setupNonThreadedSignal(voltageSignal);
+                case CURRENT -> setupNonThreadedSignal(currentSignal);
+                case TEMPERATURE -> setupNonThreadedSignal(temperatureSignal);
+                case CLOSED_LOOP_TARGET -> setupNonThreadedSignal(closedLoopTargetSignal);
+            }
+
+            return;
+        }
+
+        signalsToLog[signal.getId() + MOTOR_INPUTS_LENGTH / 2] = true;
+
+        switch (signal) {
+            case VELOCITY -> setupThreadedSignal("velocity", velocitySignal);
+            case POSITION -> setupThreadedSignal("position", positionSignal);
+            case ACCELERATION -> setupThreadedSignal("acceleration", accelerationSignal);
+            case VOLTAGE -> setupThreadedSignal("voltage", voltageSignal);
+            case CURRENT -> setupThreadedSignal("current", currentSignal);
+            case TEMPERATURE -> setupThreadedSignal("temperature", temperatureSignal);
+            case CLOSED_LOOP_TARGET -> setupThreadedSignal("target", closedLoopTargetSignal);
+            case POSITION_AND_VELOCITY -> {
+                signalsToLog[VELOCITY.getId()] = true;
+                signalsToLog[VELOCITY.getId() + MOTOR_INPUTS_LENGTH / 2] = true;
+
+                setupThreadedPair();
+            }
+        }
+    }
+
+    @Override
+    protected boolean[] getSignalsToLog() {
+        return signalsToLog;
+    }
+
+    @Override
+    protected void refreshInputs(MotorInputs inputs) {
+        if (talonFX == null) return;
+
+        inputs.setSignalsToLog(signalsToLog);
+
+        inputs.voltage = voltageSignal.getValueAsDouble();
+        inputs.current = currentSignal.getValueAsDouble();
+        inputs.temperature = temperatureSignal.getValueAsDouble();
+        inputs.target = closedLoopTargetSignal.getValueAsDouble();
+
+        inputs.systemPosition = BaseStatusSignal.getLatencyCompensatedValueAsDouble(positionSignal, velocitySignal);
+        inputs.systemVelocity = velocitySignal.getValueAsDouble();
+        inputs.systemAcceleration = accelerationSignal.getValueAsDouble();
+
+        MotorUtilities.handleThreadedInputs(inputs, signalQueueList);
+    }
+
+    private void setupNonThreadedSignal(final BaseStatusSignal signal) {
+        signal.setUpdateFrequency(50);
+        HardwareManager.registerCTREStatusSignal(signal);
+    }
+
+    private void setupThreadedSignal(String name, BaseStatusSignal signal) {
+        signal.setUpdateFrequency(ODOMETRY_FREQUENCY_HERTZ);
+        signalQueueList.put(name, OdometryThread.getInstance().registerCTRESignal(signal));
+    }
+
+    private void setupThreadedPair() {
+        positionSignal.setUpdateFrequency(ODOMETRY_FREQUENCY_HERTZ);
+        velocitySignal.setUpdateFrequency(ODOMETRY_FREQUENCY_HERTZ);
+
+        final Pair<Queue<Double>, Queue<Double>> queues = OdometryThread.getInstance().registerCTRESignalPair(positionSignal, velocitySignal);
+
+        signalQueueList.put("position", queues.getFirst());
+        signalQueueList.put("velocity", queues.getSecond());
+    }
+}
