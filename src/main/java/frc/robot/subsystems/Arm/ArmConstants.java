@@ -20,20 +20,24 @@ public class ArmConstants {
 
     protected final static Pose3d dotPose = new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0));
 
+    static {
+        armMotorConfig();
+    }
+
 
     static void armMotorConfig() {
         final MotorConfiguration config = new MotorConfiguration();
         config.idleMode = MotorProperties.IdleMode.BRAKE;
         config.inverted = false;
 
-        config.gearRatio = 67.69; // Example
+        config.gearRatio = 8; // Example
         config.profileMaxVelocity = 5;
         config.profileMaxAcceleration = 2;
 
         config.forwardSoftLimit = MAX_ANGLE.getRotations();
         config.reverseSoftLimit = MIN_ANGLE.getRotations();
         config.simulationSlot = new MotorProperties.Slot(2, 4, 0.5, 0.1, 0.01, 0.001);
-        config.simulationProperties = new SimProperties.Slot(SimProperties.SimulationType.ARM, DCMotor.getKrakenX44(1), 15, 5,5, MIN_ANGLE, MAX_ANGLE, true);
+        config.simulationProperties = new SimProperties.Slot(SimProperties.SimulationType.ARM, DCMotor.getKrakenX44(1), 8, 5,5, MIN_ANGLE, MAX_ANGLE, true);
         ARM_MOTOR.configure(config);
 
         ARM_MOTOR.setupSignalUpdates(MotorSignal.VOLTAGE);

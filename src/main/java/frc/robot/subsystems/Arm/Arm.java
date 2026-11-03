@@ -15,12 +15,6 @@ import static frc.robot.RobotContainer.POSE_ESTIMATOR;
 
 public class Arm extends GenericSubsystem {
 
-    ArmConstants armConstants = new ArmConstants();
-
-    public Arm() {
-        armMotorConfig();
-    }
-
     public void setTargetAngle(Rotation2d Angle) {
         ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, Angle.getRotations());
     }
