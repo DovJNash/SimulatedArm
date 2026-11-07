@@ -68,7 +68,7 @@ public class ButtonControls {
     private static void setupArmButtons() {
         DRIVER_CONTROLLER.getButton(Controller.Inputs.X).onTrue(ARM.setTargetAngle(180));
         DRIVER_CONTROLLER.getButton(Controller.Inputs.A).onTrue(ARM.rotateArmMaxToMin());
-        DRIVER_CONTROLLER.getButton(Controller.Inputs.B).onTrue(ARM.rotateArmToDot());
+        DRIVER_CONTROLLER.getButton(Controller.Inputs.Y).onTrue(ARM.rotateArmToDot());
         OPERATOR_CONTROLLER.k().onTrue(ARM.rotateArmMaxToMin());
         OPERATOR_CONTROLLER.m().onTrue(ARM.rotateArmToDot());
         OPERATOR_CONTROLLER.n().onTrue(ARM.resetArmEncoder());

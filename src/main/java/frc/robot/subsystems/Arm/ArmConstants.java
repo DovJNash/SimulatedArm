@@ -1,49 +1,56 @@
 package frc.robot.subsystems.Arm;
 
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import frc.lib.generic.Feedforward;
 import frc.lib.generic.hardware.motor.*;
 import frc.lib.generic.simulation.SimProperties;
+import frc.lib.generic.visualization.mechanisms.MechanismFactory;
+import frc.lib.generic.visualization.mechanisms.SingleJointedArmMechanism2d;
 
 
 public class ArmConstants {
-    protected static final Motor EXAMPLE_ARM_MOTOR = MotorFactory.createTalonFX("Example Motor", 1);
+    protected static final Motor ARM_MOTOR = MotorFactory.createTalonFX("Osama", 1);
+    public static final SingleJointedArmMechanism2d ARM_MECHANISM = MechanismFactory.createSingleJointedArmMechanism("Arm", 5);
 
-    private static final double EXAMPLE_ARM_MINIMUM_ROTATION = -0.5;
-    private static final double EXAMPLE_ARM_MAXIMUM_ROTATION = 0.5;
+    static final Rotation2d MAX_ANGLE = Rotation2d.fromDegrees(90);
+    static final Rotation2d MIN_ANGLE = Rotation2d.fromDegrees(-90);
+
+    static final Pose3d dotPose = new Pose3d(3.0, 2.0, 5.0, new Rotation3d());
 
     static {
-        configureExampleArmMotorConfiguration();
+        configureArmMotor();
     }
 
-    private static void configureExampleArmMotorConfiguration() {
-        final MotorConfiguration exampleArmMotorConfiguration = new MotorConfiguration();
+    private static void configureArmMotor() {
+        final MotorConfiguration ArmMotorConfiguration = new MotorConfiguration();
 
-        exampleArmMotorConfiguration.idleMode = MotorProperties.IdleMode.BRAKE;
+        ArmMotorConfiguration.idleMode = MotorProperties.IdleMode.BRAKE;
 
-        exampleArmMotorConfiguration.slot = new MotorProperties.Slot(0.145, 0, 0, 0.084973, 0, 0.13081, 0, Feedforward.Type.ARM);
+        ArmMotorConfiguration.slot = new MotorProperties.Slot(0.145, 0, 0, 0.084973, 0, 0.13081, 0, Feedforward.Type.ARM);
 
-        exampleArmMotorConfiguration.simulationSlot = new MotorProperties.Slot(80, 0, 1, 0, 0, 0);
-        exampleArmMotorConfiguration.simulationProperties = new SimProperties.Slot(
+        ArmMotorConfiguration.simulationSlot = new MotorProperties.Slot(80, 0, 1, 0, 0, 0);
+        ArmMotorConfiguration.simulationProperties = new SimProperties.Slot(
                 SimProperties.SimulationType.ARM,
                 DCMotor.getFalcon500(1),
                 1,
                 0.5,
                 0.01,
-                Rotation2d.fromRotations(EXAMPLE_ARM_MINIMUM_ROTATION),
-                Rotation2d.fromRotations(EXAMPLE_ARM_MAXIMUM_ROTATION),
+                Rotation2d.fromRotations(MIN_ANGLE.getRotations()),
+                Rotation2d.fromRotations(MAX_ANGLE.getRotations()),
                 true);
 
-        EXAMPLE_ARM_MOTOR.configure(exampleArmMotorConfiguration);
+        ARM_MOTOR.configure(ArmMotorConfiguration);
 
-        EXAMPLE_ARM_MOTOR.setMotorEncoderPosition(0);
+        ARM_MOTOR.setMotorEncoderPosition(0);
 
-        EXAMPLE_ARM_MOTOR.setupSignalUpdates(MotorSignal.POSITION);
-        EXAMPLE_ARM_MOTOR.setupSignalUpdates(MotorSignal.VELOCITY);
-        EXAMPLE_ARM_MOTOR.setupSignalUpdates(MotorSignal.VOLTAGE);
-        EXAMPLE_ARM_MOTOR.setupSignalUpdates(MotorSignal.CURRENT);
-        EXAMPLE_ARM_MOTOR.setupSignalUpdates(MotorSignal.CLOSED_LOOP_TARGET);
+        ARM_MOTOR.setupSignalUpdates(MotorSignal.POSITION);
+        ARM_MOTOR.setupSignalUpdates(MotorSignal.VELOCITY);
+        ARM_MOTOR.setupSignalUpdates(MotorSignal.VOLTAGE);
+        ARM_MOTOR.setupSignalUpdates(MotorSignal.CURRENT);
+        ARM_MOTOR.setupSignalUpdates(MotorSignal.CLOSED_LOOP_TARGET);
 
     }
 }
