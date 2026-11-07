@@ -66,12 +66,12 @@ public class ButtonControls {
     }
 
     private static void setupArmButtons() {
-        DRIVER_CONTROLLER.getButton(Controller.Inputs.X).onTrue(ARM.resetArmEncoder());
-        DRIVER_CONTROLLER.getButton(Controller.Inputs.A).onTrue(ARM.rotateArmMaxToMin());
-        DRIVER_CONTROLLER.getButton(Controller.Inputs.B).onTrue(ARM.rotateArmToDot());
-        OPERATOR_CONTROLLER.k().onTrue(ARM.rotateArmMaxToMin());
-        OPERATOR_CONTROLLER.m().onTrue(ARM.rotateArmToDot());
-        OPERATOR_CONTROLLER.n().onTrue(ARM.resetArmEncoder());
+        DRIVER_CONTROLLER.getButton(Controller.Inputs.X).onTrue(ARM.setArmPosition(180));
+        DRIVER_CONTROLLER.getButton(Controller.Inputs.B).onTrue(ARM.stopExampleArm());
+
+        // KEYBOARD CONTROLS
+        OPERATOR_CONTROLLER.k().onTrue(ARM.setArmPosition(180));
+        OPERATOR_CONTROLLER.m().onTrue(ARM.stopExampleArm());
     }
 
     private static void configureBLineTuning() {
