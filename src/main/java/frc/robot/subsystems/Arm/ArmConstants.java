@@ -1,53 +1,49 @@
 package frc.robot.subsystems.Arm;
 
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import frc.lib.generic.Feedforward;
 import frc.lib.generic.hardware.motor.*;
 import frc.lib.generic.simulation.SimProperties;
-import frc.lib.generic.visualization.mechanisms.MechanismFactory;
-import frc.lib.generic.visualization.mechanisms.SingleJointedArmMechanism2d;
+
 
 public class ArmConstants {
+    protected static final Motor EXAMPLE_ARM_MOTOR = MotorFactory.createTalonFX("Example Motor", 1);
 
-    protected static final Motor ARM_MOTOR = MotorFactory.createTalonFX("ArmMotor", 1);
-    public static final SingleJointedArmMechanism2d ARM_MECHANISM = MechanismFactory.createSingleJointedArmMechanism("Arm", 5);
-
-    protected final static Rotation2d
-        MAX_ANGLE = Rotation2d.fromDegrees(90),
-        MIN_ANGLE = Rotation2d.fromDegrees(-90);
-
-    protected final static Pose3d dotPose = new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0));
+    private static final double EXAMPLE_ARM_MINIMUM_ROTATION = -0.5;
+    private static final double EXAMPLE_ARM_MAXIMUM_ROTATION = 0.5;
 
     static {
-        armMotorConfig();
+        configureExampleArmMotorConfiguration();
     }
 
+    private static void configureExampleArmMotorConfiguration() {
+        final MotorConfiguration exampleArmMotorConfiguration = new MotorConfiguration();
 
-    static void armMotorConfig() {
-        final MotorConfiguration config = new MotorConfiguration();
-        config.idleMode = MotorProperties.IdleMode.BRAKE;
-        config.inverted = false;
+        exampleArmMotorConfiguration.idleMode = MotorProperties.IdleMode.BRAKE;
 
-        config.gearRatio = 8; // Example
-        config.profileMaxVelocity = 5;
-        config.profileMaxAcceleration = 2;
+        exampleArmMotorConfiguration.slot = new MotorProperties.Slot(0.145, 0, 0, 0.084973, 0, 0.13081, 0, Feedforward.Type.ARM);
 
-        config.forwardSoftLimit = MAX_ANGLE.getRotations();
-        config.reverseSoftLimit = MIN_ANGLE.getRotations();
-        config.simulationSlot = new MotorProperties.Slot(2, 4, 0.5, 0.1, 0.01, 0.001);
-        config.simulationProperties = new SimProperties.Slot(SimProperties.SimulationType.ARM, DCMotor.getKrakenX44(1), 8, 5,5, MIN_ANGLE, MAX_ANGLE, true);
-        ARM_MOTOR.configure(config);
+        exampleArmMotorConfiguration.simulationSlot = new MotorProperties.Slot(80, 0, 1, 0, 0, 0);
+        exampleArmMotorConfiguration.simulationProperties = new SimProperties.Slot(
+                SimProperties.SimulationType.ARM,
+                DCMotor.getFalcon500(1),
+                1,
+                0.5,
+                0.01,
+                Rotation2d.fromRotations(EXAMPLE_ARM_MINIMUM_ROTATION),
+                Rotation2d.fromRotations(EXAMPLE_ARM_MAXIMUM_ROTATION),
+                true);
 
-        ARM_MOTOR.setupSignalUpdates(MotorSignal.VOLTAGE);
-        ARM_MOTOR.setupSignalUpdates(MotorSignal.CURRENT);
-        ARM_MOTOR.setupSignalUpdates(MotorSignal.CLOSED_LOOP_TARGET);
-        ARM_MOTOR.setupSignalUpdates(MotorSignal.POSITION);
-        ARM_MOTOR.setupSignalUpdates(MotorSignal.VELOCITY);
-        ARM_MOTOR.setupSignalUpdates(MotorSignal.ACCELERATION);
+        EXAMPLE_ARM_MOTOR.configure(exampleArmMotorConfiguration);
+
+        EXAMPLE_ARM_MOTOR.setMotorEncoderPosition(0);
+
+        EXAMPLE_ARM_MOTOR.setupSignalUpdates(MotorSignal.POSITION);
+        EXAMPLE_ARM_MOTOR.setupSignalUpdates(MotorSignal.VELOCITY);
+        EXAMPLE_ARM_MOTOR.setupSignalUpdates(MotorSignal.VOLTAGE);
+        EXAMPLE_ARM_MOTOR.setupSignalUpdates(MotorSignal.CURRENT);
+        EXAMPLE_ARM_MOTOR.setupSignalUpdates(MotorSignal.CLOSED_LOOP_TARGET);
 
     }
-
-
 }
