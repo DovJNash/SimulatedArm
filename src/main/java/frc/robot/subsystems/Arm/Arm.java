@@ -18,7 +18,7 @@ public class Arm extends GenericSubsystem {
 
     public Command setTargetAngle(double targetAngle) {
         return Commands.runOnce(() -> {
-            ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, targetAngle);
+            ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, targetAngle / 360); // Convert degrees to rotations
         });
     }
 
@@ -39,18 +39,7 @@ public class Arm extends GenericSubsystem {
     }
 
     public Command rotateArmMaxToMin() {
-
-        Command rotateArmToMax = Commands.runOnce(() -> {
-            setTargetAngle(MAX_ANGLE.getDegrees());
-        }, this);
-
-        Command rotateArmToMin = Commands.runOnce(() -> {
-            setTargetAngle(MIN_ANGLE.getDegrees());
-        }, this);
-
-        return Commands.runOnce(() -> {
-            rotateArmToMax.andThen(rotateArmToMin);
-        }, this);
+        return setTargetAngle(MIN_ANGLE.getDegrees()).andThen(setTargetAngle(MAX_ANGLE.getDegrees()));
     }
 
     public Command rotateArmToDot() {
@@ -66,7 +55,7 @@ public class Arm extends GenericSubsystem {
 
          targetAngle = Math.toDegrees(Math.atan2(deltaY, deltaX));
 
-        return Commands.runOnce(() -> {setTargetAngle(targetAngle);}, this);
+        return setTargetAngle(targetAngle);
 
     }
 

@@ -18,7 +18,7 @@ public class ArmConstants {
     static final Rotation2d MAX_ANGLE = Rotation2d.fromDegrees(90);
     static final Rotation2d MIN_ANGLE = Rotation2d.fromDegrees(-90);
 
-    static final Pose3d dotPose = new Pose3d(3.0, 2.0, 5.0, new Rotation3d());
+    static final Pose3d dotPose = new Pose3d(25.0, 5.0, 56.0, new Rotation3d());
 
     static {
         configureArmMotor();
