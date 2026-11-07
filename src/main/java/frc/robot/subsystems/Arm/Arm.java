@@ -5,7 +5,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import frc.lib.generic.GenericSubsystem;
 import frc.lib.generic.hardware.motor.MotorProperties;
 import org.littletonrobotics.junction.Logger;
@@ -15,8 +15,10 @@ import static frc.robot.RobotContainer.POSE_ESTIMATOR;
 
 public class Arm extends GenericSubsystem {
 
-    public void setTargetAngle(Rotation2d Angle) {
-        ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, Angle.getRotations());
+    public Command setTargetAngle(double targetAngle) {
+        return Commands.runOnce(() -> {
+            ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, targetAngle);
+        });
     }
 
     public Command stopArm() {
@@ -38,11 +40,11 @@ public class Arm extends GenericSubsystem {
     public Command rotateArmMaxToMin() {
 
         Command rotateArmToMax = Commands.runOnce(() -> {
-            setTargetAngle(MAX_ANGLE);
+            setTargetAngle(MAX_ANGLE.getDegrees());
         }, this);
 
         Command rotateArmToMin = Commands.runOnce(() -> {
-            setTargetAngle(MIN_ANGLE);
+            setTargetAngle(MIN_ANGLE.getDegrees());
         }, this);
 
         return Commands.runOnce(() -> {
@@ -63,13 +65,13 @@ public class Arm extends GenericSubsystem {
 
          targetAngle = Math.toDegrees(Math.atan2(deltaY, deltaX));
 
-        return Commands.runOnce(() -> {setTargetAngle(Rotation2d.fromDegrees(targetAngle));}, this);
+        return Commands.runOnce(() -> {setTargetAngle(targetAngle);}, this);
 
     }
 
     @Override
     public void periodic() {
-        ARM_MECHANISM.updateCurrentAngle(Rotation2d.fromDegrees(ARM_MOTOR.getMotorPosition()));
+        ARM_MECHANISM.updateCurrentAngle(Rotation2d.fromRotations(ARM_MOTOR.getMotorPosition()));
         ArrayList<Pose3d> a = ARM_MECHANISM.armMechanism.generate3dMechanism();
         Pose3d[] poses = new Pose3d[a.size()];
         for (int i = 0; i < a.size(); i++) {
