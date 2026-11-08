@@ -39,7 +39,10 @@ public class Arm extends GenericSubsystem {
     }
 
     public Command rotateArmMaxToMin() {
-        return setTargetAngle(MIN_ANGLE.getDegrees()).andThen(setTargetAngle(MAX_ANGLE.getDegrees()));
+        return Commands.sequence(
+                setTargetAngle(MAX_ANGLE.getDegrees()),
+                setTargetAngle(MIN_ANGLE.getDegrees())
+        );
     }
 
     public Command rotateArmToDot() {
