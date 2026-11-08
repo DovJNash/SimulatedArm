@@ -1,5 +1,6 @@
 package frc.robot;
 
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -61,6 +62,21 @@ public class RobotContainer {
     }
 
     public void updateComponentPoses() {
+        Pose2d robotPose = POSE_ESTIMATOR.getPose();
 
+        Pose3d robotPose3d = new Pose3d(
+                robotPose.getX(),
+                robotPose.getY(),
+                0,
+                new Rotation3d(0, 0, robotPose.getRotation().getRadians())
+        );
+
+        // Replace these with the arm mount location on the robot.
+        Pose3d armBase = robotPose3d.transformBy(
+                new Transform3d(
+                        new Translation3d(0.0, 0.0, 0.5),
+                        new Rotation3d()
+                )
+        );
     }
 }
