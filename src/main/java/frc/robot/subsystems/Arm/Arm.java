@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.lib.generic.GenericSubsystem;
 import frc.lib.generic.hardware.motor.MotorProperties;
 import org.littletonrobotics.junction.Logger;
@@ -18,7 +19,8 @@ public class Arm extends GenericSubsystem {
 
     public Command setTargetAngle(double targetAngle) {
         return Commands.runOnce(() -> {
-            ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, targetAngle / 360); // Convert degrees to rotations
+            ARM_MOTOR.setOutput(MotorProperties.ControlMode.POSITION, targetAngle / 360);
+            stopArm();// Convert degrees to rotations
         });
     }
 
@@ -45,21 +47,21 @@ public class Arm extends GenericSubsystem {
         );
     }
 
-    public Command rotateArmToDot() {
+    public double calcAngleToDot(){
         Pose2d robotPose = POSE_ESTIMATOR.getPose();
         double dotPoseX = dotPose.getX(),
-         dotPoseY = dotPose.getY(),
+                dotPoseY = dotPose.getY(),
 
-         armPoseX = robotPose.getX(),
-         armPoseY = robotPose.getY(),
+                armPoseX = robotPose.getX(),
+                armPoseY = robotPose.getY(),
 
-         deltaX = dotPoseX - armPoseX,
-         deltaY = dotPoseY - armPoseY,
+                deltaX = dotPoseX - armPoseX,
+                deltaY = dotPoseY - armPoseY;
+        return Math.toDegrees(Math.atan2(deltaY, deltaX));
+    }
 
-         targetAngle = Math.toDegrees(Math.atan2(deltaY, deltaX));
-
-        return setTargetAngle(targetAngle);
-
+    public Command rotateArmToDot() {
+        return Commands.run(()-> setTargetAngle(calcAngleToDot()), this);
     }
 
 
