@@ -1,11 +1,8 @@
 package frc.robot.subsystems.Arm;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.lib.generic.GenericSubsystem;
 import frc.lib.generic.hardware.motor.MotorProperties;
 import org.littletonrobotics.junction.Logger;
@@ -47,7 +44,7 @@ public class Arm extends GenericSubsystem {
         );
     }
 
-    public double calcAngleToDot(){
+    private double calcAngleToDot(){
         Pose2d robotPose = POSE_ESTIMATOR.getPose();
         double dotPoseX = dotPose.getX(),
                 dotPoseY = dotPose.getY(),
@@ -60,19 +57,34 @@ public class Arm extends GenericSubsystem {
         return Math.toDegrees(Math.atan2(deltaY, deltaX));
     }
 
+    // instead of simple lambda that I don't use, I just wrote setArmAngle here...
     public Command rotateArmToDot() {
-        return Commands.run(()-> setTargetAngle(calcAngleToDot()), this);
+        return Commands.run(
+                () -> ARM_MOTOR.setOutput(
+                        MotorProperties.ControlMode.POSITION,
+                        calcAngleToDot() / 360
+                ),
+                this
+        );
     }
 
 
     @Override
     public void periodic() {
         ARM_MECHANISM.updateCurrentAngle(Rotation2d.fromRotations(ARM_MOTOR.getMotorPosition()));
+        Pose3d armPos = new Pose3d(POSE_ESTIMATOR.getPose().getX(), POSE_ESTIMATOR.getPose().getY(), 5, new Rotation3d(0, 0, 0));
+
         ArrayList<Pose3d> a = ARM_MECHANISM.armMechanism.generate3dMechanism();
+
         Pose3d[] poses = new Pose3d[a.size()];
         for (int i = 0; i < a.size(); i++) {
-            poses[i] = a.get(i);
+            poses[i] = armPos.transformBy(new Transform3d(
+                    a.get(0),
+                    a.get(1)
+            ));
+
         }
         Logger.recordOutput("OSAMA/MechanismPoses", poses);
+        Logger.recordOutput("HUB/HubPose", dotPose);
     }
 }
