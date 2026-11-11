@@ -54,7 +54,6 @@ public class RobotContainer {
         final Trigger batteryLowTrigger = new Trigger(() -> {
             if (getBatteryVoltage() < 11.7) lowBatteryCounter.set(lowBatteryCounter.get() + 1);
             else lowBatteryCounter.set(0);
-
             return BATTERY_LOW_THRESHOLD < lowBatteryCounter.get();
         });
 
@@ -62,21 +61,5 @@ public class RobotContainer {
     }
 
     public void updateComponentPoses() {
-        Pose2d robotPose = POSE_ESTIMATOR.getPose();
-
-        Pose3d robotPose3d = new Pose3d(
-                robotPose.getX(),
-                robotPose.getY(),
-                0,
-                new Rotation3d(0, 0, robotPose.getRotation().getRadians())
-        );
-
-        // Replace these with the arm mount location on the robot.
-        Pose3d armBase = robotPose3d.transformBy(
-                new Transform3d(
-                        new Translation3d(0.0, 0.0, 0.5),
-                        new Rotation3d()
-                )
-        );
     }
 }
