@@ -13,12 +13,12 @@ import frc.lib.generic.visualization.mechanisms.SingleJointedArmMechanism2d;
 
 public class ArmConstants {
     protected static final Motor ARM_MOTOR = MotorFactory.createTalonFX("Osama", 1);
-    public static final SingleJointedArmMechanism2d ARM_MECHANISM = MechanismFactory.createSingleJointedArmMechanism("Arm", 5);
+    public static final SingleJointedArmMechanism2d ARM_MECHANISM = MechanismFactory.createSingleJointedArmMechanism("Arm", 2);
 
     static final Rotation2d MAX_ANGLE = Rotation2d.fromDegrees(90);
     static final Rotation2d MIN_ANGLE = Rotation2d.fromDegrees(-90);
 
-    static final Pose3d dotPose = new Pose3d(25.0, 5.0, 56.0, new Rotation3d());
+    static final Pose3d dotPose = new Pose3d(5.0, 5.0, 1.6, new Rotation3d());
 
     static {
         configureArmMotor();
