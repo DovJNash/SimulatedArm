@@ -15,8 +15,8 @@ public class ArmConstants {
     protected static final Motor ARM_MOTOR = MotorFactory.createTalonFX("Osama", 1);
     public static final SingleJointedArmMechanism2d ARM_MECHANISM = MechanismFactory.createSingleJointedArmMechanism("Arm", 2);
 
-    static final Rotation2d MAX_ANGLE = Rotation2d.fromDegrees(90);
-    static final Rotation2d MIN_ANGLE = Rotation2d.fromDegrees(-90);
+    static final Rotation2d MAX_ANGLE = Rotation2d.fromDegrees(720);
+    static final Rotation2d MIN_ANGLE = Rotation2d.fromDegrees(-720);
 
     static final Pose3d dotPose = new Pose3d(5.0, 5.0, 1.6, new Rotation3d());
 
@@ -31,7 +31,7 @@ public class ArmConstants {
 
         ArmMotorConfiguration.slot = new MotorProperties.Slot(0.145, 0, 0, 0.084973, 0, 0.13081, 0, Feedforward.Type.ARM);
 
-        ArmMotorConfiguration.simulationSlot = new MotorProperties.Slot(80, 0, 1, 0, 0, 0);
+        ArmMotorConfiguration.simulationSlot = new MotorProperties.Slot(5, 0, 1, 0, 0, 0);
         ArmMotorConfiguration.simulationProperties = new SimProperties.Slot(
                 SimProperties.SimulationType.ARM,
                 DCMotor.getFalcon500(1),
