@@ -83,11 +83,7 @@ public class Arm extends GenericSubsystem {
 
         Pose3d[] poses = new Pose3d[a.size()];
         for (int i = 0; i < a.size(); i++) {
-            poses[i] = armPos.transformBy(new Transform3d(
-                    a.get(0),
-                    a.get(1)
-            ));
-
+            poses[i] = armPos.transformBy(new Transform3d(a.get(0), a.get(1)));
         }
         Logger.recordOutput("OSAMA/MechanismPoses", poses);
         Logger.recordOutput("HUB/HubPose", dotPose);
