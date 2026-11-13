@@ -53,8 +53,13 @@ public class Arm extends GenericSubsystem {
                 armPoseY = robotPose.getY(),
 
                 deltaX = dotPoseX - armPoseX,
-                deltaY = dotPoseY - armPoseY;
-        return Math.toDegrees(Math.atan2(deltaY, deltaX));
+                deltaY = dotPoseY - armPoseY,
+
+                target = Math.toDegrees(Math.atan2(deltaY, deltaX)),
+                current = ARM_MOTOR.getMotorPosition() * 360,
+                angle = Math.IEEEremainder(target - current, 360);
+        System.out.println(angle);
+        return angle + current;
     }
 
     // instead of simple lambda that I don't use, I just wrote setArmAngle here...
@@ -68,7 +73,7 @@ public class Arm extends GenericSubsystem {
         );
     }
 
-
+    //TODO: delete armPos and add a component to the robot instead
     @Override
     public void periodic() {
         ARM_MECHANISM.updateCurrentAngle(Rotation2d.fromRotations(ARM_MOTOR.getMotorPosition()));
