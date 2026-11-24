@@ -25,7 +25,7 @@ public class Turret extends GenericSubsystem {
             double dy = hubPose.getY() - POSE_ESTIMATOR.getPose().getY();
             double dx = hubPose.getX() - POSE_ESTIMATOR.getPose().getX();
 
-            Rotation2d angle = Rotation2d.fromRadians(Math.atan2(dy, dx));
+            Rotation2d angle = Rotation2d.fromRadians(Math.abs(Math.atan2(dy, dx)));
             TURRET_MOTOR.setOutput(MotorProperties.ControlMode.POSITION,angle.getRotations());
         }, this);
     }
