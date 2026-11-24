@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Arm;
+package frc.robot.subsystems.arm;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -12,13 +12,12 @@ import frc.lib.generic.visualization.mechanisms.SingleJointedArmMechanism2d;
 
 
 public class ArmConstants {
-    protected static final Motor ARM_MOTOR = MotorFactory.createTalonFX("Osama", 1);
+    public static final Motor ARM_MOTOR = MotorFactory.createTalonFX("Osama", 1);
     public static final SingleJointedArmMechanism2d ARM_MECHANISM = MechanismFactory.createSingleJointedArmMechanism("Arm", 2);
 
     static final Rotation2d MAX_ANGLE = Rotation2d.fromDegrees(720);
     static final Rotation2d MIN_ANGLE = Rotation2d.fromDegrees(-720);
 
-    static final Pose3d dotPose = new Pose3d(5.0, 5.0, 1.6, new Rotation3d());
 
     static {
         configureArmMotor();

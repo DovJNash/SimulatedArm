@@ -1,6 +1,5 @@
 package frc.robot;
 
-import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -11,7 +10,8 @@ import frc.robot.poseestimation.PoseEstimator;
 import frc.robot.poseestimation.camera.Camera;
 import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.subsystems.Arm.Arm;
+import frc.robot.subsystems.arm.Arm;
+import frc.robot.subsystems.turret.Turret;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -28,6 +28,8 @@ public class RobotContainer {
     public static final Swerve SWERVE = new Swerve();
     public static final Leds LEDS = new Leds();
     public static final Questionnaire QUESTIONNAIRE = new Questionnaire();
+    public static final Turret TURRET = new Turret();
+    public static final Arm ARM = new Arm();
 
     public RobotContainer() {
         DriverStation.silenceJoystickConnectionWarning(true);
@@ -37,7 +39,6 @@ public class RobotContainer {
       
         ButtonControls.initializeButtons(ButtonControls.ButtonLayout.TELEOP);
     }
-    public static final Arm ARM = new Arm();
 
     public Command getAutonomousCommand() {
         return QUESTIONNAIRE.getCommand();

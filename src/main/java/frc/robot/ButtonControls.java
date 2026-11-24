@@ -20,11 +20,9 @@ import java.util.function.DoubleSupplier;
 import static frc.lib.generic.hardware.controllers.Controller.Axis.LEFT_X;
 import static frc.lib.generic.hardware.controllers.Controller.Axis.LEFT_Y;
 import static frc.lib.generic.visualization.DrawUtils.TWO_PI;
-import static frc.robot.RobotContainer.POSE_ESTIMATOR;
-import static frc.robot.RobotContainer.SWERVE;
+import static frc.robot.RobotContainer.*;
 import static frc.robot.subsystems.swerve.SwerveCommands.rotateToTarget;
 import static frc.robot.utilities.PathingConstants.ROBOT_CONFIG;
-import static frc.robot.RobotContainer.ARM;
 
 public class ButtonControls {
     public enum ButtonLayout {
@@ -65,10 +63,10 @@ public class ButtonControls {
         setupDriving();
     }
 
-    private static void setupArmButtons() {
-        DRIVER_CONTROLLER.getButton(Controller.Inputs.X).onTrue(ARM.setTargetAngle(180));
-        DRIVER_CONTROLLER.getButton(Controller.Inputs.A).onTrue(ARM.rotateArmMaxToMin());
-        DRIVER_CONTROLLER.getButton(Controller.Inputs.Y).onTrue(ARM.rotateArmToDot());
+    private static void setupTurretButtons() {
+        DRIVER_CONTROLLER.getButton(Controller.Inputs.Y).onTrue(TURRET.trackHub());
+        DRIVER_CONTROLLER.getButton(Controller.Inputs.B).onTrue(ARM.setTargetAngle(Rotation2d.kCCW_90deg));
+        DRIVER_CONTROLLER.getButton(Controller.Inputs.A).onTrue(TURRET.setTargetPos(Rotation2d.kCCW_90deg));
     }
 
     private static void configureBLineTuning() {
@@ -91,7 +89,7 @@ public class ButtonControls {
 
         setupOperatorKeyboardButtons();
         setupTeleopLEDs();
-        setupArmButtons();
+        setupTurretButtons();
     }
 
     private static void setupOperatorKeyboardButtons() {
